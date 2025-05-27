@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>🎯 生涯規劃報告 I+II（最終修正版）</title>
+</head>
+<body>
+  <h1>🎯 生涯規劃報告 I+II（完整版）</h1>
+  <p>請依照步驟填寫，下方提供互動小測驗與引導提示協助你完成內容。</p>
+
+  <!-- 🔎 小測驗應該出現在 第一部分 與 第二部分之間 -->
+  <h2>🔎 我是哪一型？互動小測驗</h2>
+  <form id="typeQuiz">
+    <label><input type="radio" name="type" value="🌟 積極挑戰型"> 我會主動進階學習與參加競賽</label><br>
+    <label><input type="radio" name="type" value="🔍 穩定探索型"> 我在穩定努力中尋找方向</label><br>
+    <label><input type="radio" name="type" value="🔄 重整起步型"> 我正在試著調整與補強學習</label><br>
+    <label><input type="radio" name="type" value="🛠️ 實作經驗型"> 我有很多活動與實作經驗</label><br>
+    <label><input type="radio" name="type" value="📚 持續累積型"> 我認真學習並穩定累積成果</label><br>
+  </form>
+  <div id="quiz-result" style="margin-top:10px; font-weight:bold;"></div>
+
+  <div id="typeHints" style="margin-top:15px; padding:10px; border-left:4px solid #337ab7;"></div>
+
+  <h2>🧠 第二部分：學習歷程盤點（九大項）</h2>
+  <div id="dynamicFields"></div>
+
+  <script>
+    const typeHints = {
+      "🌟 積極挑戰型": ["你是否參與過競賽或進階學習？", "你怎麼安排自己的課業與準備目標？"],
+      "🔍 穩定探索型": ["你曾在哪些科目努力後看到進步？", "有沒有活動讓你開始對某個領域產生興趣？"],
+      "🔄 重整起步型": ["你是否曾遇到學習瓶頸？你怎麼面對？", "你在哪些方面想要改變自己？"],
+      "🛠️ 實作經驗型": ["你參與過哪些活動？做了哪些實作？", "你有沒有把活動經驗連結到學科？"],
+      "📚 持續累積型": ["你如何持續安排自己的學習時間？", "你如何整理學習成果與筆記？"]
+    };
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const quiz = document.getElementById("typeQuiz");
+      const result = document.getElementById("quiz-result");
+      const hintBlock = document.getElementById("typeHints");
+
+      quiz.addEventListener("change", () => {
+        const val = quiz.querySelector("input:checked")?.value;
+        if (!val) return;
+        result.innerText = `你選擇的是：${val}`;
+        const tips = typeHints[val] || [];
+        hintBlock.innerHTML = `<h3>📘 模擬寫作引導</h3><ul>` +
+          tips.map(q => `<li>${q}</li>`).join("") + `</ul>`;
+      });
+    });
+  </script>
+
+<script>
+const fieldTitles = [
+  "學科學習", "跨領域學習", "學科競賽", "自主學習", "科學講座與論壇",
+  "志工與社會服務", "社團與領導活動", "作品與專題報告", "未來學習目標"
+];
+
+const studyGroups = [
+  ["數理化學學群", "包含數學、化學、物理相關科系"],
+  ["工程學群", "強調設計與應用，包含土木、機械、電機等"],
+  ["資訊學群", "資料處理、AI、軟體與系統應用"],
+  ["生命科學學群", "研究生命現象與醫學基礎"]
+];
+
+window.addEventListener("DOMContentLoaded", () => {
+  const dyn = document.getElementById("dynamicFields");
+  if (!dyn) return;
+  fieldTitles.forEach(title => {
+    const options = studyGroups.map(([label, desc]) => `<option value="${label}" title="${desc}">${label}</option>`).join("");
+    dyn.innerHTML += `
+      <div class="sub" style="border:1px solid #ccc; padding:10px; margin:10px 0;">
+        <h3>🔹 ${title}</h3>
+        <label>目前成果：</label><br><textarea rows="2" style="width:100%;" required></textarea><br>
+        <label>學習歷程紀錄：</label><br><textarea rows="2" style="width:100%;" required></textarea><br>
+        <label>補強計畫：</label><br><textarea rows="2" style="width:100%;" required></textarea><br>
+        <label>對應學群（可多選）：</label><br>
+        <select required multiple size="4" style="width:100%;">${options}</select>
+      </div>
+    `;
+  });
+
+  updateSuggestion();
+});
+
+function extractTextInputs() {
+  return Array.from(document.querySelectorAll("textarea")).map(a => a.value.toLowerCase()).join(" ");
+}
+
+function suggestGroups(text) {
+  const keywords = {
+    "資訊": "資訊學群", "程式": "資訊學群", "數學": "數理化學學群",
+    "物理": "數理化學學群", "化學": "數理化學學群", "實驗": "生命科學學群",
+    "生物": "生命科學學群", "醫": "醫藥衛生學群", "環境": "地球與環境學群"
+  };
+  const result = new Set();
+  for (const [k, group] of Object.entries(keywords)) {
+    if (text.includes(k)) result.add(group);
+  }
+  return [...result];
+}
+
+function updateSuggestion() {
+  const container = document.getElementById("ai-suggestion");
+  if (!container) return;
+  const raw = extractTextInputs();
+  const matched = suggestGroups(raw);
+  if (matched.length === 0) {
+    container.innerHTML = "（尚未找到明確的推薦，請填寫更多內容）";
+  } else {
+    const query = matched.join(" ");
+    container.innerHTML = "🔍 根據你的填寫，以下學群可能與你相符：<ul>" +
+      matched.map(g => `<li>${g}（請至 ColleGo! 搜尋該學群）</li>`).join("") +
+      "</ul><br><a href='https://www.google.com/search?q=site:collego.edu.tw+" +
+      encodeURIComponent(query) + "' target='_blank'>🔎 在 ColleGo! 搜尋這些學群</a>";
+  }
+}
+
+function downloadReport() {
+  const inputs = document.querySelectorAll("textarea, input[type=text], select");
+  let content = "🎯 生涯規劃報告 I+II 填寫內容如下：
+
+";
+  inputs.forEach((el, i) => {
+    const label = el.previousElementSibling?.innerText?.trim() || `欄位 ${i+1}`;
+    let value = "";
+    if (el.tagName === "SELECT" && el.multiple) {
+      value = Array.from(el.selectedOptions).map(o => o.value).join(", ");
+    } else {
+      value = el.value.trim();
+    }
+    content += `【${label}】
+${value}
+
+`;
+  });
+  const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = `career_report.txt`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+</script>
+<div style="margin-top:20px;">
+  <button onclick="downloadReport()">💾 下載 txt</button>
+</div>
+<div style="margin-top:10px;">
+  <h2>🤖 AI 推薦學群</h2>
+  <p>根據你輸入的內容，自動分析可能相關學群：</p>
+  <div id="ai-suggestion">（請先填寫上方內容，本區將自動產生建議學群）</div>
+</div>
+</body></html>
