@@ -8,7 +8,6 @@
   <h1>🎯 生涯規劃報告 I+II（完整版）</h1>
   <p>請依照步驟填寫，下方提供互動小測驗與引導提示協助你完成內容。</p>
 
-  <!-- 🔎 小測驗應該出現在 第一部分 與 第二部分之間 -->
   <h2>🔎 我是哪一型？互動小測驗</h2>
   <form id="typeQuiz">
     <label><input type="radio" name="type" value="🌟 積極挑戰型"> 我會主動進階學習與參加競賽</label><br>
@@ -19,37 +18,31 @@
   </form>
   <div id="quiz-result" style="margin-top:10px; font-weight:bold;"></div>
 
+  <h2>📘 模擬寫作引導</h2>
   <div id="typeHints" style="margin-top:15px; padding:10px; border-left:4px solid #337ab7;"></div>
 
   <h2>🧠 第二部分：學習歷程盤點（九大項）</h2>
   <div id="dynamicFields"></div>
 
-  <script>
-    const typeHints = {
-      "🌟 積極挑戰型": ["你是否參與過競賽或進階學習？", "你怎麼安排自己的課業與準備目標？"],
-      "🔍 穩定探索型": ["你曾在哪些科目努力後看到進步？", "有沒有活動讓你開始對某個領域產生興趣？"],
-      "🔄 重整起步型": ["你是否曾遇到學習瓶頸？你怎麼面對？", "你在哪些方面想要改變自己？"],
-      "🛠️ 實作經驗型": ["你參與過哪些活動？做了哪些實作？", "你有沒有把活動經驗連結到學科？"],
-      "📚 持續累積型": ["你如何持續安排自己的學習時間？", "你如何整理學習成果與筆記？"]
-    };
+  <div style="margin-top:20px;">
+    <button onclick="downloadReport()">💾 下載 txt</button>
+  </div>
 
-    document.addEventListener("DOMContentLoaded", () => {
-      const quiz = document.getElementById("typeQuiz");
-      const result = document.getElementById("quiz-result");
-      const hintBlock = document.getElementById("typeHints");
-
-      quiz.addEventListener("change", () => {
-        const val = quiz.querySelector("input:checked")?.value;
-        if (!val) return;
-        result.innerText = `你選擇的是：${val}`;
-        const tips = typeHints[val] || [];
-        hintBlock.innerHTML = `<h3>📘 模擬寫作引導</h3><ul>` +
-          tips.map(q => `<li>${q}</li>`).join("") + `</ul>`;
-      });
-    });
-  </script>
+  <div style="margin-top:10px;">
+    <h2>🤖 AI 推薦學群</h2>
+    <p>根據你輸入的內容，自動分析可能相關學群：</p>
+    <div id="ai-suggestion">（請先填寫上方內容，本區將自動產生建議學群）</div>
+  </div>
 
 <script>
+const typeHints = {
+  "🌟 積極挑戰型": ["你是否參與過競賽或進階學習？", "你怎麼安排自己的課業與準備目標？"],
+  "🔍 穩定探索型": ["你曾在哪些科目努力後看到進步？", "有沒有活動讓你開始對某個領域產生興趣？"],
+  "🔄 重整起步型": ["你是否曾遇到學習瓶頸？你怎麼面對？", "你在哪些方面想要改變自己？"],
+  "🛠️ 實作經驗型": ["你參與過哪些活動？做了哪些實作？", "你有沒有把活動經驗連結到學科？"],
+  "📚 持續累積型": ["你如何持續安排自己的學習時間？", "你如何整理學習成果與筆記？"]
+};
+
 const fieldTitles = [
   "學科學習", "跨領域學習", "學科競賽", "自主學習", "科學講座與論壇",
   "志工與社會服務", "社團與領導活動", "作品與專題報告", "未來學習目標"
@@ -64,20 +57,35 @@ const studyGroups = [
 
 window.addEventListener("DOMContentLoaded", () => {
   const dyn = document.getElementById("dynamicFields");
-  if (!dyn) return;
-  fieldTitles.forEach(title => {
-    const options = studyGroups.map(([label, desc]) => `<option value="${label}" title="${desc}">${label}</option>`).join("");
-    dyn.innerHTML += `
-      <div class="sub" style="border:1px solid #ccc; padding:10px; margin:10px 0;">
-        <h3>🔹 ${title}</h3>
-        <label>目前成果：</label><br><textarea rows="2" style="width:100%;" required></textarea><br>
-        <label>學習歷程紀錄：</label><br><textarea rows="2" style="width:100%;" required></textarea><br>
-        <label>補強計畫：</label><br><textarea rows="2" style="width:100%;" required></textarea><br>
-        <label>對應學群（可多選）：</label><br>
-        <select required multiple size="4" style="width:100%;">${options}</select>
-      </div>
-    `;
-  });
+  if (dyn) {
+    fieldTitles.forEach(title => {
+      const options = studyGroups.map(([label, desc]) => `<option value="${label}" title="${desc}">${label}</option>`).join("");
+      dyn.innerHTML += `
+        <div class="sub" style="border:1px solid #ccc; padding:10px; margin:10px 0;">
+          <h3>🔹 ${title}</h3>
+          <label>目前成果：</label><br><textarea rows="2" style="width:100%;" required></textarea><br>
+          <label>學習歷程紀錄：</label><br><textarea rows="2" style="width:100%;" required></textarea><br>
+          <label>補強計畫：</label><br><textarea rows="2" style="width:100%;" required></textarea><br>
+          <label>對應學群（可多選）：</label><br>
+          <select required multiple size="4" style="width:100%;">${options}</select>
+        </div>
+      `;
+    });
+  }
+
+  const quiz = document.getElementById("typeQuiz");
+  const result = document.getElementById("quiz-result");
+  const hintBlock = document.getElementById("typeHints");
+
+  if (quiz) {
+    quiz.addEventListener("change", () => {
+      const val = quiz.querySelector("input:checked")?.value;
+      if (!val) return;
+      result.innerText = `你選擇的是：${val}`;
+      const tips = typeHints[val] || [];
+      hintBlock.innerHTML = `<ul>` + tips.map(q => `<li>${q}</li>`).join("") + `</ul>`;
+    });
+  }
 
   updateSuggestion();
 });
@@ -142,12 +150,5 @@ ${value}
   document.body.removeChild(link);
 }
 </script>
-<div style="margin-top:20px;">
-  <button onclick="downloadReport()">💾 下載 txt</button>
-</div>
-<div style="margin-top:10px;">
-  <h2>🤖 AI 推薦學群</h2>
-  <p>根據你輸入的內容，自動分析可能相關學群：</p>
-  <div id="ai-suggestion">（請先填寫上方內容，本區將自動產生建議學群）</div>
-</div>
-</body></html>
+</body>
+</html>
