@@ -2,133 +2,94 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>🎯 生涯規劃報告 I+II（最終修正版）</title>
-</head>
-<body>
-  <h1>🎯 生涯規劃報告 I+II（完整版）</h1>
-  <p>請依照步驟填寫，下方提供互動小測驗與引導提示協助你完成內容。</p>
-
-  <h2>🔎 我是哪一型？互動小測驗</h2>
-  <form id="typeQuiz">
-    <label><input type="radio" name="type" value="🌟 積極挑戰型"> 我會主動進階學習與參加競賽</label><br>
-    <label><input type="radio" name="type" value="🔍 穩定探索型"> 我在穩定努力中尋找方向</label><br>
-    <label><input type="radio" name="type" value="🔄 重整起步型"> 我正在試著調整與補強學習</label><br>
-    <label><input type="radio" name="type" value="🛠️ 實作經驗型"> 我有很多活動與實作經驗</label><br>
-    <label><input type="radio" name="type" value="📚 持續累積型"> 我認真學習並穩定累積成果</label><br>
-  </form>
-  <div id="quiz-result" style="margin-top:10px; font-weight:bold;"></div>
-
-  <h2>📘 模擬寫作引導</h2>
-  <div id="typeHints" style="margin-top:15px; padding:10px; border-left:4px solid #337ab7;"></div>
-
-  <h2>🧠 第二部分：學習歷程盤點（九大項）</h2>
-  <div id="dynamicFields"></div>
-
-  <div style="margin-top:20px;">
-    <button onclick="downloadReport()">💾 下載 txt</button>
-  </div>
-
-  <div style="margin-top:10px;">
-    <h2>🤖 AI 推薦學群</h2>
-    <p>根據你輸入的內容，自動分析可能相關學群：</p>
-    <div id="ai-suggestion">（請先填寫上方內容，本區將自動產生建議學群）</div>
-  </div>
-
+  <title>🎯 生涯規劃報告 I+II（完整版）</title>
+  <style>
+    body { font-family: 'Microsoft JhengHei', sans-serif; padding: 30px; background: #f4f6f8; }
+    h1, h2 { color: #2c3e50; }
+    label { display: block; margin-top: 15px; font-weight: bold; }
+    input[type=text], textarea, select {
+      width: 100%; padding: 10px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc;
+    }
+    textarea { min-height: 80px; }
+    .section {
+      background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 30px;
+    }
+    button {
+      background-color: #27ae60; color: white; padding: 10px 20px; border: none;
+      border-radius: 5px; cursor: pointer; font-size: 16px; margin-right: 10px;
+    }
+    button:hover { background-color: #1e8449; }
+    .group-description, .group-links { font-size: 14px; color: #444; margin-top: 5px; }
+  </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/docx/7.7.0/docx.umd.min.js"></script>
 <script>
-const typeHints = {
-  "🌟 積極挑戰型": ["你是否參與過競賽或進階學習？", "你怎麼安排自己的課業與準備目標？"],
-  "🔍 穩定探索型": ["你曾在哪些科目努力後看到進步？", "有沒有活動讓你開始對某個領域產生興趣？"],
-  "🔄 重整起步型": ["你是否曾遇到學習瓶頸？你怎麼面對？", "你在哪些方面想要改變自己？"],
-  "🛠️ 實作經驗型": ["你參與過哪些活動？做了哪些實作？", "你有沒有把活動經驗連結到學科？"],
-  "📚 持續累積型": ["你如何持續安排自己的學習時間？", "你如何整理學習成果與筆記？"]
-};
-
-const fieldTitles = [
-  "學科學習", "跨領域學習", "學科競賽", "自主學習", "科學講座與論壇",
-  "志工與社會服務", "社團與領導活動", "作品與專題報告", "未來學習目標"
-];
-
-const studyGroups = [
-  ["數理化學學群", "包含數學、化學、物理相關科系"],
-  ["工程學群", "強調設計與應用，包含土木、機械、電機等"],
-  ["資訊學群", "資料處理、AI、軟體與系統應用"],
-  ["生命科學學群", "研究生命現象與醫學基礎"]
-];
-
-window.addEventListener("DOMContentLoaded", () => {
-  const dyn = document.getElementById("dynamicFields");
-  if (dyn) {
-    fieldTitles.forEach(title => {
-      const options = studyGroups.map(([label, desc]) => `<option value="${label}" title="${desc}">${label}</option>`).join("");
-      dyn.innerHTML += `
-        <div class="sub" style="border:1px solid #ccc; padding:10px; margin:10px 0;">
-          <h3>🔹 ${title}</h3>
-          <label>目前成果：</label><br><textarea rows="2" style="width:100%;" required></textarea><br>
-          <label>學習歷程紀錄：</label><br><textarea rows="2" style="width:100%;" required></textarea><br>
-          <label>補強計畫：</label><br><textarea rows="2" style="width:100%;" required></textarea><br>
-          <label>對應學群（可多選）：</label><br>
-          <select required multiple size="4" style="width:100%;">${options}</select>
-        </div>
-      `;
-    });
-  }
-
-  const quiz = document.getElementById("typeQuiz");
-  const result = document.getElementById("quiz-result");
-  const hintBlock = document.getElementById("typeHints");
-
-  if (quiz) {
-    quiz.addEventListener("change", () => {
-      const val = quiz.querySelector("input:checked")?.value;
-      if (!val) return;
-      result.innerText = `你選擇的是：${val}`;
-      const tips = typeHints[val] || [];
-      hintBlock.innerHTML = `<ul>` + tips.map(q => `<li>${q}</li>`).join("") + `</ul>`;
-    });
-  }
-
-  updateSuggestion();
-});
-
-function extractTextInputs() {
-  return Array.from(document.querySelectorAll("textarea")).map(a => a.value.toLowerCase()).join(" ");
-}
-
-function suggestGroups(text) {
-  const keywords = {
-    "資訊": "資訊學群", "程式": "資訊學群", "數學": "數理化學學群",
-    "物理": "數理化學學群", "化學": "數理化學學群", "實驗": "生命科學學群",
-    "生物": "生命科學學群", "醫": "醫藥衛生學群", "環境": "地球與環境學群"
-  };
-  const result = new Set();
-  for (const [k, group] of Object.entries(keywords)) {
-    if (text.includes(k)) result.add(group);
-  }
-  return [...result];
-}
-
-function updateSuggestion() {
-  const container = document.getElementById("ai-suggestion");
-  if (!container) return;
-  const raw = extractTextInputs();
-  const matched = suggestGroups(raw);
-  if (matched.length === 0) {
-    container.innerHTML = "（尚未找到明確的推薦，請填寫更多內容）";
-  } else {
-    const query = matched.join(" ");
-    container.innerHTML = "🔍 根據你的填寫，以下學群可能與你相符：<ul>" +
-      matched.map(g => `<li>${g}（請至 ColleGo! 搜尋該學群）</li>`).join("") +
-      "</ul><br><a href='https://www.google.com/search?q=site:collego.edu.tw+" +
-      encodeURIComponent(query) + "' target='_blank'>🔎 在 ColleGo! 搜尋這些學群</a>";
-  }
-}
-
-function downloadReport() {
-  const inputs = document.querySelectorAll("textarea, input[type=text], select");
-  let content = "🎯 生涯規劃報告 I+II 填寫內容如下：
-
-";
+function saveDraft() {
+  const inputs = document.querySelectorAll("input[type=text], textarea, select");
+  const draft = {};
   inputs.forEach((el, i) => {
+    if (el.multiple) {
+      draft["multi_"+i] = Array.from(el.selectedOptions).map(o => o.value);
+    } else {
+      draft[i] = el.value;
+    }
+  });
+  localStorage.setItem("career_draft", JSON.stringify(draft));
+}
+
+function loadDraft() {
+  const saved = localStorage.getItem("career_draft");
+  if (!saved) return;
+  const confirmRestore = confirm("是否載入上次未完成的填寫內容？");
+  if (!confirmRestore) return;
+  const data = JSON.parse(saved);
+  const inputs = document.querySelectorAll("input[type=text], textarea, select");
+  inputs.forEach((el, i) => {
+    if (el.multiple && data["multi_"+i]) {
+      Array.from(el.options).forEach(opt => {
+        opt.selected = data["multi_"+i].includes(opt.value);
+      });
+      showGroupTooltip(el);
+    } else if (data[i]) {
+      el.value = data[i];
+    }
+  });
+  updateSuggestion();
+}
+
+function clearDraft() {
+  localStorage.removeItem("career_draft");
+  alert("已清除草稿！請重新整理頁面。");
+}
+
+setInterval(saveDraft, 5000);
+window.addEventListener("DOMContentLoaded", loadDraft);
+
+async function downloadWord() {
+  const { Document, Packer, Paragraph, TextRun } = window.docx;
+  const inputs = document.querySelectorAll("input[type=text], textarea, select");
+  const doc = new Document();
+  const children = [];
+
+  const today = new Date().toLocaleDateString('zh-TW');
+children.push(new Paragraph({ children: [new TextRun({ text: "🎯 生涯規劃報告 I+II", bold: true, size: 28 })] }));
+children.push(new Paragraph({ children: [new TextRun({ text: `📅 輸出日期：${today}`, italics: true })] }));
+children.push(new Paragraph(""));
+children.push(new Paragraph("親愛的同學："));
+children.push(new Paragraph("高一下學期即將進入尾聲，這段時間你在各項課程、社團、活動中不斷嘗試、學習，也慢慢累積起屬於自己的經驗與故事。"));
+children.push(new Paragraph("現在，是個很好的時機，請你停下來回望過去，仔細盤點這一年來的學習歷程。透過具體的回顧與書寫，你將更清楚自己擅長什麼、喜歡什麼、想加強什麼，也能為高二做出更有方向的準備。"));
+children.push(new Paragraph("本報告不只是填空，而是一個你與自己對話的機會。請你認真、誠懇地完成每一個欄位，它將成為你學習歷程檔案中寶貴的一頁，也幫助你在未來申請大學、探索生涯時，更加有據可依、有話可說。"));
+children.push(new Paragraph("加油，我們期待在文字中看見更清晰的你。"));
+children.push(new Paragraph(""));
+
+  const studentClass = document.getElementById("studentClass").value.trim();
+  const studentName = document.getElementById("studentName").value.trim();
+  const reportDate = document.getElementById("reportDate").value.trim();
+  children.push(new Paragraph(`📘 班級：${studentClass}`));
+  children.push(new Paragraph(`📌 姓名：${studentName}`));
+  children.push(new Paragraph(`📅 日期：${reportDate}`));
+
+  inputs.forEach((el, i) => {
+    if (["studentClass", "studentName", "reportDate"].includes(el.id)) return;
     const label = el.previousElementSibling?.innerText?.trim() || `欄位 ${i+1}`;
     let value = "";
     if (el.tagName === "SELECT" && el.multiple) {
@@ -136,19 +97,333 @@ function downloadReport() {
     } else {
       value = el.value.trim();
     }
-    content += `【${label}】
-${value}
-
-`;
+    children.push(new Paragraph({ spacing: { before: 200 }, children: [new TextRun({ text: `【${label}】`, bold: true })] }));
+    children.push(new Paragraph(value));
   });
-  const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = `career_report.txt`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+
+  
+  const summaryText = document.getElementById("auto-summary")?.innerText.trim() || "(尚未產生)";
+  const commentText = document.getElementById("teacher-comment")?.innerText.trim() || "(尚未產生)";
+  children.push(new Paragraph(""));
+  children.push(new Paragraph({ children: [new TextRun({ text: "📝 自動摘要", bold: true, size: 26 })] }));
+  children.push(new Paragraph(summaryText));
+  children.push(new Paragraph({ children: [new TextRun({ text: "📣 教師評語建議", bold: true, size: 26 })] }));
+  children.push(new Paragraph(commentText));
+
+  const docFile = new Document({ sections: [{ properties: {}, children }] });
+  const blob = await Packer.toBlob(docFile);
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `生涯規劃報告_${studentName || "未命名"}.docx`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
 </script>
+</head>
+<body>
+  <div class="section">
+  <p style="font-size: 16px; color: #333; line-height: 1.6;">
+    親愛的同學：<br><br>
+    高一下學期即將進入尾聲，這段時間你在各項課程、社團、活動中不斷嘗試、學習，也慢慢累積起屬於自己的經驗與故事。<br><br>
+    現在，是個很好的時機，請你停下來回望過去，仔細盤點這一年來的學習歷程。透過具體的回顧與書寫，你將更清楚自己擅長什麼、喜歡什麼、想加強什麼，也能為高二做出更有方向的準備。<br><br>
+    本報告不只是填空，而是一個你與自己對話的機會。請你認真、誠懇地完成每一個欄位，它將成為你學習歷程檔案中寶貴的一頁，也幫助你在未來申請大學、探索生涯時，更加有據可依、有話可說。<br><br>
+    加油，我們期待在文字中看見更清晰的你。
+  </p>
+</div>
+  <h1>🎯 生涯規劃報告 I+II（完整版）</h1>
+
+  <div class="section">
+    <label>📘 班級：</label><input type="text" id="studentClass" required>
+    <label>📌 姓名：</label><input type="text" id="studentName" required>
+    <label>📅 日期：</label><input type="text" id="reportDate" placeholder="例如：2025/06/01" required>
+  </div>
+
+  <div class="section">
+    
+  <div class="section">
+    <label>🎯 選擇你的學習者類型（將顯示個別引導提示）：</label>
+    <select id="learnerType" onchange="updatePrompts()">
+      <option value="">-- 請選擇 --</option>
+      <option value="top">🌟 成績優異型</option>
+      <option value="middle">📘 穩定中等型</option>
+      <option value="weak">🧩 學習低潮型</option>
+      <option value="active">🎭 忙於活動型</option>
+      <option value="steady">📖 認真累積型</option>
+    </select>
+    <div id="promptTips" style="margin-top: 10px; font-size: 14px; color: #444;"></div>
+  </div>
+
+<h2>🧠 第一部分：學習歷程回顧</h2>
+    <label>你曾為什麼目標努力？</label><textarea required></textarea>
+    <label>你最有成就感的一件事（學習）是什麼？</label><textarea required></textarea>
+    <label>你覺得自己比較適合哪種學習方式？理論 / 實作 / 創作？</label><textarea required></textarea>
+    <label>哪個經驗讓你覺得自己適合某個領域？</label><textarea required></textarea>
+  </div>
+
+  <div class="section">
+    <h2>📘 第二部分：學習歷程盤點（九大項）</h2>
+    <div id="dynamicFields"></div>
+  </div>
+
+  <div class="section">
+    <h2>🎯 第三部分：高二發展計畫</h2>
+    <label>我需要加強的部分：</label><textarea required></textarea>
+    <label>新增的自主學習與活動計畫：</label><textarea required></textarea>
+    <label>預計參與的課外活動與計畫：</label><textarea required></textarea>
+    <label>希望高二能達成的目標：</label><textarea required></textarea>
+  </div>
+
+  <div class="section">
+    <h2>🎓 第四部分：升學方向規劃</h2>
+    <label>興趣學群：</label><textarea required></textarea>
+    <label>可能選擇的科系：</label><textarea required></textarea>
+    <label>所需補強之學習歷程項目：</label><textarea required></textarea>
+  </div>
+
+  <div class="section">
+    <h2>✍ 結語反思</h2>
+    <label>你從這次回顧中得到的體悟：</label><textarea required></textarea>
+    <label>你希望接下來的學習狀態與努力方向是：</label><textarea required></textarea>
+  </div>
+
+  
+  <div class="section">
+    <h2>📝 自動摘要與教師評語</h2>
+    <label>🔍 自動摘要：</label>
+    <div id="auto-summary" style="border: 1px solid #ccc; padding: 10px; border-radius: 5px; background: #fdfdfd; min-height: 80px;"></div>
+    <br>
+    <label>📣 教師評語建議：</label>
+    <div id="teacher-comment" style="border: 1px solid #ccc; padding: 10px; border-radius: 5px; background: #fdfdfd; min-height: 80px;"></div>
+    <br>
+    <button onclick="generateSummary()">🧠 產生摘要與評語</button>
+  </div>
+
+<div class="section">
+    <h2>🤖 AI 推薦學群（依填寫內容自動預測）</h2>
+    <div id="ai-suggestion">（請先填寫上方內容，本區將自動產生建議學群）</div>
+  </div>
+
+  <button onclick="downloadReport()">💾 下載填寫結果 (.txt)</button>
+  <button onclick="downloadWord()">📝 下載 Word 檔 (.docx)</button>
+  <button onclick="clearDraft()">🗑 清除草稿</button>
+
+  <script>
+    const fieldTitles = [
+      "學科學習", "跨領域學習", "學科競賽", "自主學習", "科學講座與論壇",
+      "志工與社會服務", "社團與領導活動", "作品與專題報告", "未來學習目標"
+    ];
+
+    const studyGroups = [
+      ["數理化學學群", "著重數學與自然科學原理，包含數學系、化學系、物理系等"],
+      ["工程學群", "強調工程實作與應用，包含機械、電機、土木、生醫工程等"],
+      ["資訊學群", "探討電腦科學與資料處理，包含資工、資管、AI 等"],
+      ["生物資源學群", "聚焦動植物、農業與環境，包含農藝、生技、森林等"],
+      ["生命科學學群", "研究生命現象，包含生科、生醫、生化、基因體等"],
+      ["醫藥衛生學群", "涵蓋醫學、藥學、護理、公衛等健康領域"],
+      ["地球與環境學群", "探討地球系統與永續發展，包含地科、環工、海洋等"],
+      ["設計學群", "強調創意與實作，包含工設、視傳、建築、時尚等"],
+      ["藝術學群", "藝術創作與表演相關，包含美術、音樂、戲劇、舞蹈等"],
+      ["社會與心理學群", "研究人類行為與社會系統，包含社會、心理、人類學等"],
+      ["人文社會學群", "探討歷史、哲學與語文，包含中文、外文、歷史、哲學等"],
+      ["法政學群", "涉及法律與政治制度，包含法律、政治、外交等"],
+      ["財經管理學群", "經濟運作與企業經營，包含會計、財金、企管、行銷等"],
+      ["教育學群", "教學與師資養成相關，包含教育、幼教、特教等"],
+      ["其他學群", "不屬上述分類，如體育、軍警、語言等"]
+    ];
+
+    const dyn = document.getElementById("dynamicFields");
+    fieldTitles.forEach(title => {
+      const options = studyGroups.map(([label, desc]) => `<option value="${label}" title="${desc}">${label}</option>`).join("");
+      dyn.innerHTML += `
+        <div class="sub">
+          <h3>🔹 ${title}</h3>
+          <label>目前成果：</label><textarea required></textarea>
+          <label>學習歷程紀錄：</label><textarea required></textarea>
+          <label>補強計畫：</label><textarea required></textarea>
+          <label>對應學群：（可多選，請按住 Ctrl 或 ⌘ 鍵）</label>
+          <select required multiple size="5" onchange="showGroupTooltip(this)">${options}</select>
+          <div class="group-description"></div>
+          <div class="group-links"></div>
+        </div>
+      `;
+    });
+
+    function showGroupTooltip(select) {
+      const descDiv = select.nextElementSibling;
+      const linkDiv = descDiv.nextElementSibling;
+      const selected = Array.from(select.selectedOptions);
+      const tips = selected.map(option => `• ${option.value}: ${option.title}`);
+      const links = selected.map(option => `🔍 請至 ColleGo! 搜尋「${option.value}」相關科系`);
+      descDiv.innerHTML = tips.length ? tips.join('<br>') : '(尚未選擇學群)';
+      linkDiv.innerHTML = links.length ? links.join('<br>') : '';
+    }
+
+    document.querySelectorAll('select[multiple]').forEach(select => {
+      const notice = document.createElement('div');
+      notice.style.color = 'gray';
+      notice.style.fontSize = '14px';
+      notice.textContent = '（已選擇 0 / 最多 3 個）';
+      select.after(notice);
+      select.addEventListener('change', () => {
+        const count = Array.from(select.selectedOptions).length;
+        notice.textContent = `（已選擇 ${count} / 最多 3 個）`;
+        if (count > 3) {
+          alert('最多只能選擇 3 個學群！');
+        }
+      });
+    });
+
+    function downloadReport() {
+      const fields = document.querySelectorAll("textarea, input[type=text], select");
+      let content = "🎯 生涯規劃報告 I+II 填寫內容如下：\n\n";
+      const studentClass = document.getElementById("studentClass").value.trim();
+      const studentName = document.getElementById("studentName").value.trim();
+      const reportDate = document.getElementById("reportDate").value.trim();
+      content += `📘 班級：${studentClass}\n📌 姓名：${studentName}\n📅 日期：${reportDate}\n\n`;
+
+      fields.forEach((el, i) => {
+        if (["studentName", "studentClass", "reportDate"].includes(el.id)) return;
+        const label = el.previousElementSibling?.innerText?.trim() || `欄位 ${i + 1}`;
+        let value = "";
+        if (el.tagName === "SELECT" && el.multiple) {
+          value = Array.from(el.selectedOptions).map(opt => opt.value).join(", ");
+        } else {
+          value = el.value.trim();
+        }
+        content += `【${label}】\n${value}\n\n`;
+      });
+
+      const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `生涯規劃報告_${studentName || "未命名"}.txt`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function extractTextInputs() {
+      return Array.from(document.querySelectorAll("textarea")).map(a => a.value.toLowerCase()).join(" ");
+    }
+    function suggestGroups(text) {
+      const keywords = {
+        "資訊": "資訊學群",
+        "程式": "資訊學群",
+        "數學": "數理化學學群",
+        "實驗": "生命科學學群",
+        "生物": "生命科學學群",
+        "醫": "醫藥衛生學群",
+        "環境": "地球與環境學群",
+        "創作": "藝術學群",
+        "繪圖": "設計學群",
+        "心理": "社會與心理學群",
+        "教學": "教育學群",
+        "經濟": "財經管理學群",
+        "法律": "法政學群"
+      };
+      const result = new Set();
+      for (const [k, group] of Object.entries(keywords)) {
+        if (text.includes(k)) result.add(group);
+      }
+      return [...result];
+    }
+    function updateSuggestion() {
+      const raw = extractTextInputs();
+      const matched = suggestGroups(raw);
+      const container = document.getElementById("ai-suggestion");
+      if (matched.length === 0) {
+        container.innerHTML = "（尚未找到明確的推薦，請填寫更多內容）";
+      } else {
+        const query = matched.join(' ');
+container.innerHTML = "🔍 根據你的填寫，以下學群可能與你相符：<ul>" +
+  matched.map(g => `<li>${g}（請至 ColleGo! 搜尋該學群）</li>`).join("") +
+  "</ul><br><a href='https://www.google.com/search?q=site:collego.edu.tw+" + encodeURIComponent(query) + "' target='_blank'>🔎 在 ColleGo! 搜尋這些學群</a>";
+      }
+    }
+    
+
+function fillGuidedPlaceholders(type) {
+  const guides = {
+    top: [
+      "我參加了哪些競賽？如何準備與安排？",
+      "最有成就感的經驗與我的突破",
+      "我適合哪種學習方式？舉例說明",
+      "某個實作或比賽經驗，讓我發現自己的潛力"
+    ],
+    middle: [
+      "我在哪一科下了功夫並明顯進步？",
+      "一次讓我感到自信的學習經驗",
+      "我嘗試了哪些不同的學習方法？",
+      "哪個經驗讓我開始對某領域感興趣？"
+    ],
+    weak: [
+      "哪個學科對我來說最具挑戰？",
+      "一次小小進步卻帶來的成就感",
+      "我做過哪些改變或嘗試？",
+      "實作或服務經驗是否帶來正面影響？"
+    ],
+    active: [
+      "我在活動中擔任什麼角色？學到了什麼？",
+      "我如何分配活動與課業時間？",
+      "活動過程中是否用上課堂所學？",
+      "活動經驗是否讓我思考未來方向？"
+    ],
+    steady: [
+      "我每天如何規劃讀書？",
+      "我擅長用哪些方法幫助自己學習？",
+      "我是否結合不同學科進行學習？",
+      "哪個經驗讓我看見穩定努力的價值？"
+    ]
+  };
+  const list = guides[type] || [];
+  const textareas = document.querySelectorAll(".section:nth-of-type(3) textarea");
+  list.forEach((hint, i) => {
+    if (textareas[i]) {
+      textareas[i].placeholder = hint;
+      textareas[i].style.transition = "box-shadow 0.3s ease-in-out";
+      textareas[i].style.boxShadow = "0 0 8px rgba(52, 152, 219, 0.5)";
+      setTimeout(() => textareas[i].style.boxShadow = "none", 1500);
+    }
+  });
+}
+
+function updatePrompts() {
+  const detail = {
+    "top": `你在自然科表現出色，對學習有明確目標與熱情。或許你參加過競賽、進修課程，也擅長自我安排與挑戰更高層次的知識。試著回顧那些讓你閃閃發亮的時刻，你是怎麼規劃、怎麼堅持，又從中學到了什麼？<br><br>✦ 引導思考：<br>- 你曾經代表學校參與哪些重要活動或競賽？<br>- 面對壓力，你是如何分配課業與準備時間的？<br>- 哪些延伸閱讀或學習資源對你影響最大？`,
+    "middle": `也許你不是班上最亮眼的那一位，但你總是默默努力，不輕言放棄。在學習的道路上，你可能也經歷過迷惘，但你願意嘗試、改變與請教。請試著從實例出發，找出那些你曾經努力過並產生轉變的故事。<br><br>✦ 引導思考：<br>- 哪一科是你努力之後進步最明顯的？<br>- 你用過哪些學習方法？是否有些對你特別有效？<br>- 你曾參與什麼活動或講座，讓你對某個領域產生濃厚興趣？`,
+    "weak": `也許成績未如預期，學習過程也曾讓你感到灰心。但你願意面對挫折、思考突破的可能，這就值得肯定。人生不只有成績一項指標，請試著寫出那些讓你感到一點點希望、帶來小小成就的經歷。<br><br>✦ 引導思考：<br>- 哪一科對你來說最困難？困難的原因是什麼？<br>- 有沒有某次小進步讓你眼睛一亮、心頭一暖？<br>- 在志工、實作或活動中，有沒有讓你覺得「我也可以」的時刻？`,
+    "active": `你可能在班上是不可或缺的幹部、社團靈魂人物，或活躍於校外舞台。這些豐富的經驗，會成為你學習歷程中最具個人風格的一環。請分享你如何在熱情中找到平衡，在活動中累積能力。<br><br>✦ 引導思考：<br>- 你最投入、最享受的一場活動是什麼？你扮演什麼角色？<br>- 過程中有沒有難題？你是怎麼處理的？<br>- 有沒有哪門課的知識，竟然在活動中派上用場？`,
+    "steady": `你或許不是最出眾的名字，但你總是穩紮穩打、踏實前進。你善於規劃讀書時段，也會整理筆記與交叉整合不同科目。請讓我們看見那份穩定與持續，是怎麼一步步累積出來的。<br><br>✦ 引導思考：<br>- 你平常如何安排每日讀書時間？<br>- 有沒有好用的工具或筆記方法，幫助你吸收知識？<br>- 你是否做過整合多科的報告或專題？成效如何？`
+  };
+  const type = document.getElementById("learnerType").value;
+  const promptDiv = document.getElementById("promptTips");
+  promptDiv.innerHTML = detail[type] || "";
+}
+
+
+function generateSummary() {
+  const allText = extractTextInputs();
+  const summaryDiv = document.getElementById("auto-summary");
+  const commentDiv = document.getElementById("teacher-comment");
+  const sentences = allText.split(/[。！？\n]/).filter(s => s.length > 8).slice(0, 3);
+  const summary = sentences.map(s => "・" + s.trim() + "。").join("<br>");
+  summaryDiv.innerHTML = summary || "(請先輸入內容)";
+
+  let comment = "你的回顧內容展現出良好的思考與反思能力，期待你在高二能持續累積學習能量。";
+  if (allText.includes("比賽") || allText.includes("競賽")) {
+    comment = "你在競賽與挑戰中表現出積極的企圖心，請持續精進與深化實力。";
+  } else if (allText.includes("活動") || allText.includes("幹部")) {
+    comment = "你在活動中展現出良好的領導與合作能力，建議再強化學科表現。";
+  } else if (allText.includes("困難") || allText.includes("挫折")) {
+    comment = "你能坦然面對學習上的低潮，這份誠實與努力值得肯定，請持續調整與前進。";
+  }
+  commentDiv.innerHTML = comment;
+}
+
+document.querySelectorAll("textarea").forEach(el => {
+      el.addEventListener("input", () => setTimeout(updateSuggestion, 300));
+    });
+  </script>
 </body>
 </html>
